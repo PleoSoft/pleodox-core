@@ -7,7 +7,7 @@
 	<groupId>com.pleosoft.pleodox</groupId>
 	<artifactId>pleodox-core</artifactId>
 	<packaging>jar</packaging>
-	<version>1.0.0-RELEASE</version>
+	<version>1.0.1-RELEASE</version>
 
 	<name>pleodox-core</name>
 	<description>Pleodox Core</description>
@@ -55,22 +55,17 @@
 		<dependency>
 			<groupId>org.docx4j</groupId>
 			<artifactId>docx4j-core</artifactId>
-			<version>8.0.0</version>
-		</dependency>
-		<dependency>
-			<groupId>org.docx4j</groupId>
-			<artifactId>docx4j-JAXB-Internal</artifactId>
-			<version>8.0.0</version>
+			<version>11.1.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-text</artifactId>
-			<version>1.6</version>
+			<version>1.7</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.pdfbox</groupId>
 			<artifactId>pdfbox</artifactId>
-			<version>2.0.15</version>
+			<version>2.0.16</version>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.datatype</groupId>
