@@ -188,7 +188,7 @@ public class TemplatesService {
 				ut.addSource(file);
 			}
 
-			Path path = storageService.rsolveTemporary(moveTo + "/" + finalName).toAbsolutePath();
+			Path path = storageService.resolveTemporary(moveTo + "/" + finalName).toAbsolutePath();
 			ut.setDestinationFileName(path.toString());
 			ut.mergeDocuments(MemoryUsageSetting.setupMainMemoryOnly());
 

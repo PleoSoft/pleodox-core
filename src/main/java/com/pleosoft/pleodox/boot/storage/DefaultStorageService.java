@@ -44,7 +44,7 @@ public class DefaultStorageService implements StorageService {
 		Files.createDirectories(templateLocation);
 	}
 
-	public Path rsolveTemporary(String filename) {
+	public Path resolveTemporary(String filename) {
 		if (filename.contains("..")) {
 			// This is a security check
 			throw new StorageException("Cannot store file with relative path outside current directory " + filename);
@@ -55,7 +55,7 @@ public class DefaultStorageService implements StorageService {
 
 	public Path storeTemporary(InputStream inputStream, String filename) {
 		try {
-			final Path newPath = rsolveTemporary(filename);
+			final Path newPath = resolveTemporary(filename);
 			File filePath = newPath.toFile();
 			if (!filePath.exists()) {
 				filePath.mkdirs();

@@ -21,7 +21,7 @@ import java.nio.file.Path;
 
 public interface StorageService {
 
-	public Path rsolveTemporary(String filename);
+	public Path resolveTemporary(String filename);
 
 	public Path storeTemporary(InputStream inputStream, String filename);
 
