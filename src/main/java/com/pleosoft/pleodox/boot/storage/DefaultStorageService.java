@@ -81,7 +81,8 @@ public class DefaultStorageService implements StorageService {
 			final Path templatesPath = this.templateLocation;
 			return Files.walk(templatesPath, 1).filter(Files::isRegularFile)
 					.filter(path -> !path.equals(templatesPath)
-							&& StringUtils.getFilenameExtension(path.getFileName().toString()).equals("docx"))
+							&& (StringUtils.getFilenameExtension(path.getFileName().toString()).equals("docx")
+									|| StringUtils.getFilenameExtension(path.getFileName().toString()).equals("dotx")))
 					.map(p -> p).collect(toList());
 		} catch (final IOException e) {
 			throw new StorageException("Failed to read stored files", e);

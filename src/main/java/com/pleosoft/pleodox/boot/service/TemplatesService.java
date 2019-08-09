@@ -22,6 +22,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -35,6 +36,8 @@ import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.multipdf.PDFMergerUtility.DocumentMergeMode;
 import org.docx4j.Docx4J;
 import org.docx4j.model.datastorage.CustomXmlDataStorage;
+import org.docx4j.openpackaging.contenttype.ContentTypeManager;
+import org.docx4j.openpackaging.contenttype.ContentTypes;
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,7 +88,8 @@ public class TemplatesService {
 
 			String cleanTemplatePath = StringUtils.cleanPath(templateName);
 			final Path resource = storageService.loadExistingTemplate(cleanTemplatePath);
-			String filename = cleanTemplatePath.replaceAll("/", "_");
+			String fullTemplateFilename = cleanTemplatePath.replaceAll("/", "_");
+			String filename = StringUtils.stripFilenameExtension(fullTemplateFilename) + ".docx";
 
 			if (!StringUtils.hasText(folderName)) {
 				folderName = UUID.randomUUID().toString();
@@ -101,6 +105,7 @@ public class TemplatesService {
 					try (OutputStream os = Files.newOutputStream(tempResource)) {
 						try (InputStream templateStream = Files.newInputStream(resource)) {
 							WordprocessingMLPackage wordMLPackage = Docx4J.load(templateStream);
+
 							Pair<JsonNode, CustomXmlDataStorage> customXmlPart = templatingService
 									.getPleodoxCustomXmlPart(wordMLPackage);
 
@@ -111,7 +116,7 @@ public class TemplatesService {
 					}
 
 					if (!TemplateOutputFormat.DOCX.equals(format)) {
-						tempResource = transformationService.transformFromDocx(tempResource.toFile(), format);
+						tempResource = transformationService.transform(tempResource.toFile(), format);
 					}
 
 					documentGenerationHandler.afterDocumentGenerated();
@@ -206,8 +211,8 @@ public class TemplatesService {
 		}
 	}
 
-	public Path generateDocument(DataRoot request, TemplateOutputFormat format, Boolean readOnly,
-			String protectionPass, List<String> templates, String moveTo, String namePrefix, Boolean mergePdf)
+	public Path generateDocument(DataRoot request, TemplateOutputFormat format, Boolean readOnly, String protectionPass,
+			List<String> templates, String moveTo, String namePrefix, Boolean mergePdf)
 			throws FileNotFoundException, IOException {
 		Path resource = null;
 		try {

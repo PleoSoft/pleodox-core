@@ -20,16 +20,22 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.docx4j.Docx4J;
 import org.docx4j.model.datastorage.CustomXmlDataStorage;
 import org.docx4j.model.datastorage.CustomXmlDataStoragePartSelector;
+import org.docx4j.openpackaging.contenttype.CTOverride;
+import org.docx4j.openpackaging.contenttype.ContentTypeManager;
+import org.docx4j.openpackaging.contenttype.ContentTypes;
 import org.docx4j.openpackaging.exceptions.Docx4JException;
 import org.docx4j.openpackaging.packages.ProtectDocument;
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
@@ -174,7 +180,15 @@ public class DocumentGenerateService {
 			Docx4J.bind(wordMLPackage, xmlStreamTmp,
 					Docx4J.FLAG_BIND_INSERT_XML | Docx4J.FLAG_BIND_BIND_XML | Docx4J.FLAG_BIND_REMOVE_SDT);
 		}
-		Docx4J.save(wordMLPackage, os, Docx4J.FLAG_NONE);
+
+		try {
+			ContentTypeManager ctm = wordMLPackage.getContentTypeManager();
+			ctm.addOverrideContentType(new URI("/word/document.xml"), ContentTypes.WORDPROCESSINGML_DOCUMENT);
+			Docx4J.save(wordMLPackage, os, Docx4J.FLAG_NONE);
+		} catch (URISyntaxException e) {
+			throw new IOException(e);
+		}
+
 	}
 
 	@SuppressWarnings("unchecked")

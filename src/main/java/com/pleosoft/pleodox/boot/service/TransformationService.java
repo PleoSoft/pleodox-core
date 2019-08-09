@@ -37,7 +37,7 @@ public class TransformationService {
 		this.converter = converter;
 	}
 
-	public Path transformFromDocx(File sourceDocument, TemplateOutputFormat outputFormat) {
+	public Path transform(File sourceDocument, TemplateOutputFormat outputFormat) {
 		Assert.notNull(sourceDocument, "sourceDocument parameter cannot be empty");
 		Assert.notNull(outputFormat, "outputFormat parameter cannot be empty");
 
