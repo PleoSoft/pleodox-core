@@ -32,7 +32,7 @@ public class TransformationService {
 	private static final Logger LOG = LoggerFactory.getLogger(TransformationService.class);
 
 	private final DocumentConverter converter;
-	
+
 	public TransformationService(final DocumentConverter converter) {
 		this.converter = converter;
 	}

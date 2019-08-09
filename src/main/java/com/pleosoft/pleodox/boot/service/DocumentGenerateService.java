@@ -27,13 +27,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.docx4j.Docx4J;
 import org.docx4j.model.datastorage.CustomXmlDataStorage;
 import org.docx4j.model.datastorage.CustomXmlDataStoragePartSelector;
-import org.docx4j.openpackaging.contenttype.CTOverride;
 import org.docx4j.openpackaging.contenttype.ContentTypeManager;
 import org.docx4j.openpackaging.contenttype.ContentTypes;
 import org.docx4j.openpackaging.exceptions.Docx4JException;
