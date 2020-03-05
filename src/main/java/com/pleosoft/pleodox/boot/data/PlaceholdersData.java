@@ -16,12 +16,13 @@
 
 package com.pleosoft.pleodox.boot.data;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class PlaceholdersData {
+public class PlaceholdersData implements Serializable {
 
 	private final Set<String> fields = new HashSet<>();
 	private final Map<String, Set<String>> tables = new HashMap<>();

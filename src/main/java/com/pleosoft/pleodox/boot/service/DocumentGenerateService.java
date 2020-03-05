@@ -26,12 +26,17 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.docx4j.Docx4J;
 import org.docx4j.model.datastorage.CustomXmlDataStorage;
 import org.docx4j.model.datastorage.CustomXmlDataStoragePartSelector;
+import org.docx4j.model.fields.FieldUpdater;
+import org.docx4j.model.fields.merge.DataFieldName;
+import org.docx4j.model.fields.merge.MailMerger.OutputField;
 import org.docx4j.openpackaging.contenttype.ContentTypeManager;
 import org.docx4j.openpackaging.contenttype.ContentTypes;
 import org.docx4j.openpackaging.exceptions.Docx4JException;
@@ -39,7 +44,9 @@ import org.docx4j.openpackaging.packages.ProtectDocument;
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
 import org.docx4j.openpackaging.parts.CustomXmlDataStoragePart;
 import org.docx4j.openpackaging.parts.CustomXmlPart;
+import org.docx4j.openpackaging.parts.DocPropsCustomPart;
 import org.docx4j.wml.STDocProtect;
+import org.springframework.integration.dsl.Transformers;
 import org.springframework.integration.transformer.ObjectToMapTransformer;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.GenericMessage;
@@ -78,7 +85,7 @@ public class DocumentGenerateService {
 	// TODO find a better way to use jackson (tried many things but it does
 	// not work as we need in this case)
 	// maybe use a regexp instead of substings?
-	public String getDataRootAsString(DataRoot dataroot) throws JsonProcessingException {
+	private String getDataRootAsString(DataRoot dataroot) throws JsonProcessingException {
 		Map<String, Object> data = dataroot.getData();
 		StringBuilder stringBuilder = new StringBuilder("<?xml version='1.0' encoding='UTF-8'?><TestXMLNode xmlns=\"")
 				.append(dataroot.getXmlns()).append("\">");
@@ -93,7 +100,7 @@ public class DocumentGenerateService {
 		return stringBuilder.toString();
 	}
 
-	public Pair<JsonNode, CustomXmlDataStorage> getPleodoxCustomXmlPart(WordprocessingMLPackage wordMLPackage) {
+	protected JsonNode getPleodoxCustomXmlPart(WordprocessingMLPackage wordMLPackage) {
 		try {
 			CustomXmlPart xmlPart = CustomXmlDataStoragePartSelector.getCustomXmlDataStoragePart(wordMLPackage);
 			if (!(xmlPart instanceof CustomXmlDataStoragePart)) {
@@ -108,7 +115,7 @@ public class DocumentGenerateService {
 			if (rootname != null && "TESTXMLNODE".equals(rootname.asText().toUpperCase()) && namespace != null
 					&& "PLEODOX".equals(namespace.asText().toUpperCase())) {
 
-				return Pair.of(readTree, customXmlDataStorage);
+				return readTree;
 			}
 		} catch (Exception e) {
 			throw new RuntimeException("Issue while reading the template document!", e);
@@ -117,19 +124,21 @@ public class DocumentGenerateService {
 		throw new RuntimeException("No PLEODOX custom xml part found!");
 	}
 
-	protected void generateWord(WordprocessingMLPackage wordMLPackage,
-			Pair<JsonNode, CustomXmlDataStorage> customXmlPart, DataRoot dataroot, OutputStream os, Boolean readOnly,
-			String protectionPassword) throws IOException, Docx4JException {
+	protected void generateWord(WordprocessingMLPackage wordMLPackage, DataRoot dataroot, OutputStream os,
+			Boolean readOnly, String protectionPassword) throws IOException, Docx4JException {
 
 		dataroot.setXmlns("PLEODOX");
 
-		PlaceholdersData holderData = jonNodeToPlaceholdersData(customXmlPart.getLeft());
+		PlaceholdersData holderData = retrieveFields(wordMLPackage);
 		Set<String> templateKeys = holderData.getKeys();
 
 		Map<String, Object> data = dataroot.getData();
 		PlaceholdersData newData = mapToPlaceHoldersData(null, data);
 		Set<String> newKeys = newData.getKeys();
 		newKeys.retainAll(templateKeys);
+
+		// List<Map<DataFieldName, String>> fields = new ArrayList<Map<DataFieldName,
+		// String>>();
 
 		for (String templateKey : templateKeys) {
 			Map<String, Object> tmpMap = data;
@@ -162,6 +171,7 @@ public class DocumentGenerateService {
 							tableEntry.put(column, UNKNOWN_STRING);
 						}
 						tmpMap.put(keys[keys.length - 1], tableEntry);
+						// items.put(new DataFieldName(keys[keys.length - 1]), "2015");
 					} else {
 						tmpMap.put(keys[keys.length - 1], UNKNOWN_STRING);
 					}
@@ -169,14 +179,55 @@ public class DocumentGenerateService {
 			}
 		}
 
+		ObjectToMapTransformer mapTransformer = Transformers.toMap(true);
+		Message<Map<?, ?>> message = new GenericMessage<>(dataroot.getData());
+		Map<String, String> payload = (Map<String, String>) mapTransformer.transform(message).getPayload();
+
+		DocPropsCustomPart docPropsCustomPart = wordMLPackage.getDocPropsCustomPart();
+		if (docPropsCustomPart == null) {
+			wordMLPackage.addDocPropsCustomPart();
+			docPropsCustomPart = wordMLPackage.getDocPropsCustomPart();
+		}
+
+		// org.docx4j.docProps.custom.ObjectFactory factory = new
+		// org.docx4j.docProps.custom.ObjectFactory();
+
+		Map<DataFieldName, String> items = new HashMap<>();
+		Set<Entry<String, String>> entrySet = payload.entrySet();
+		for (Entry<String, String> entry : entrySet) {
+			items.put(new DataFieldName(entry.getKey()), entry.getValue());
+
+			if (docPropsCustomPart != null && !entry.getKey().contains(".")) {
+//				org.docx4j.docProps.custom.Properties.Property newProp = factory.createPropertiesProperty();
+//				newProp.setName(entry.getKey());
+//				newProp.setFmtid(DocPropsCustomPart.fmtidValLpwstr); // Magic string
+//				newProp.setPid(customProps.getNextId());
+//				newProp.setLpwstr(entry.getValue());
+//				docProperties.add(newProp);
+
+				docPropsCustomPart.setProperty(entry.getKey(), entry.getValue());
+			}
+		}
+
+		// TODO if variables, if fields, if custom xmlpart
+		if (!items.isEmpty()) {
+			org.docx4j.model.fields.merge.MailMerger.setMERGEFIELDInOutput(OutputField.REMOVED);
+			org.docx4j.model.fields.merge.MailMerger.performMerge(wordMLPackage, items, true);
+			
+			FieldUpdater f1 = new FieldUpdater(wordMLPackage);
+			f1.update(true);
+		}
+
+		if (!templateKeys.isEmpty()) {
+			try (InputStream xmlStreamTmp = getDataRootInputStream(dataroot)) {
+				Docx4J.bind(wordMLPackage, xmlStreamTmp,
+						Docx4J.FLAG_BIND_INSERT_XML | Docx4J.FLAG_BIND_BIND_XML | Docx4J.FLAG_BIND_REMOVE_SDT);
+			}
+		}
+		
 		if (Boolean.TRUE.equals(readOnly)) {
 			final ProtectDocument pd = new ProtectDocument(wordMLPackage);
 			pd.restrictEditing(STDocProtect.READ_ONLY, protectionPassword);
-		}
-
-		try (InputStream xmlStreamTmp = getDataRootInputStream(dataroot)) {
-			Docx4J.bind(wordMLPackage, xmlStreamTmp,
-					Docx4J.FLAG_BIND_INSERT_XML | Docx4J.FLAG_BIND_BIND_XML | Docx4J.FLAG_BIND_REMOVE_SDT);
 		}
 
 		try {
@@ -200,7 +251,7 @@ public class DocumentGenerateService {
 		return placeholdersData;
 	}
 
-	private PlaceholdersData mapToPlaceHoldersData(String parentKey, Map<String, Object> map) {
+	public static PlaceholdersData mapToPlaceHoldersData(String parentKey, Map<String, Object> map) {
 		Set<String> fields = new HashSet<>();
 		Map<String, Set<String>> tables = new HashMap<>();
 
@@ -214,7 +265,7 @@ public class DocumentGenerateService {
 	}
 
 	@SuppressWarnings("unchecked")
-	private void flattenMap(String parentKey, Map<String, Object> map, Set<String> fields,
+	public static void flattenMap(String parentKey, Map<String, Object> map, Set<String> fields,
 			Map<String, Set<String>> tables) {
 		for (Map.Entry<String, Object> entry : map.entrySet()) {
 			String key = entry.getKey();
@@ -226,7 +277,7 @@ public class DocumentGenerateService {
 			} else if (value instanceof List<?>) {
 				for (Object obj : (List<?>) value) {
 					if (obj instanceof Map) {
-						Set<String> keySet = ((Map<String, ?>) obj).keySet();
+						Set<String> keySet = new HashSet<>(((Map<String, ?>) obj).keySet());
 						tables.put(compositeKey, keySet);
 					} else {
 						fields.add(compositeKey);
@@ -235,6 +286,23 @@ public class DocumentGenerateService {
 			} else {
 				fields.add(compositeKey);
 			}
+		}
+	}
+
+	public PlaceholdersData retrieveFields(InputStream is) throws IOException {
+		try {
+			return retrieveFields(Docx4J.load(is));
+		} catch (Throwable e) {
+			return new PlaceholdersData();
+		}
+	}
+
+	public PlaceholdersData retrieveFields(WordprocessingMLPackage wordMLPackage) throws IOException {
+		try {
+			JsonNode node = getPleodoxCustomXmlPart(wordMLPackage);
+			return jonNodeToPlaceholdersData(node);
+		} catch (Throwable e) {
+			return new PlaceholdersData();
 		}
 	}
 }

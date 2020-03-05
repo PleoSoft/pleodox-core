@@ -29,13 +29,9 @@ import java.util.List;
 import java.util.UUID;
 import java.util.zip.ZipException;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.multipdf.PDFMergerUtility.DocumentMergeMode;
-import org.docx4j.Docx4J;
-import org.docx4j.model.datastorage.CustomXmlDataStorage;
-import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.integration.file.FileHeaders;
@@ -45,8 +41,8 @@ import org.springframework.messaging.Message;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.pleosoft.pleodox.boot.data.DataRoot;
+import com.pleosoft.pleodox.boot.data.TemplateOptions;
 import com.pleosoft.pleodox.boot.data.TemplateOutputFormat;
 import com.pleosoft.pleodox.boot.storage.StorageService;
 
@@ -59,15 +55,17 @@ public class TemplatesService {
 	private final TransformationService transformationService;
 	private final ZipTransformer zipTransformer;
 	private final DocumentGenerationHandler documentGenerationHandler;
+	private final List<DocumentGenerator> documentGenerators;
 
 	public TemplatesService(DocumentGenerateService templatingService, StorageService storageService,
 			TransformationService transformationService, ZipTransformer zipTransformer,
-			DocumentGenerationHandler documentGenerationHandler) {
+			DocumentGenerationHandler documentGenerationHandler, List<DocumentGenerator> documentGenerators) {
 		this.templatingService = templatingService;
 		this.storageService = storageService;
 		this.transformationService = transformationService;
 		this.zipTransformer = zipTransformer;
 		this.documentGenerationHandler = documentGenerationHandler;
+		this.documentGenerators = documentGenerators;
 	}
 
 	private final Path generateDocument(DataRoot request, String folderName, String templateName,
@@ -85,8 +83,22 @@ public class TemplatesService {
 
 			String cleanTemplatePath = StringUtils.cleanPath(templateName);
 			final Path resource = storageService.loadExistingTemplate(cleanTemplatePath);
-			String fullTemplateFilename = cleanTemplatePath.replaceAll("/", "_");
-			String filename = StringUtils.stripFilenameExtension(fullTemplateFilename) + ".docx";
+			String filename = cleanTemplatePath.replaceAll("/", "_");
+
+			// find the first applicable generator
+			DocumentGenerator applicableGenerator = null;
+			TemplateOptions templateOptions = new TemplateOptions().addOption("readOnly", readOnly)
+					.addOption("protectionPass", protectionPass).addOption("templatename", cleanTemplatePath);
+			for (DocumentGenerator generator : documentGenerators) {
+				if (generator.isTransformable(templateName, request, templateOptions)) {
+					applicableGenerator = generator;
+					break;
+				}
+			}
+
+			if (applicableGenerator == null) {
+				throw new TemplateFailedException(new Exception("There is no document generator applicable"));
+			}
 
 			if (!StringUtils.hasText(folderName)) {
 				folderName = UUID.randomUUID().toString();
@@ -101,14 +113,7 @@ public class TemplatesService {
 				try (InputStream tplStream = Files.newInputStream(tempResource)) {
 					try (OutputStream os = Files.newOutputStream(tempResource)) {
 						try (InputStream templateStream = Files.newInputStream(resource)) {
-							WordprocessingMLPackage wordMLPackage = Docx4J.load(templateStream);
-
-							Pair<JsonNode, CustomXmlDataStorage> customXmlPart = templatingService
-									.getPleodoxCustomXmlPart(wordMLPackage);
-
-							templatingService.generateWord(wordMLPackage, customXmlPart, request, os, readOnly,
-									protectionPass);
-
+							applicableGenerator.generate(templateStream, os, request, templateOptions);
 						}
 					}
 
