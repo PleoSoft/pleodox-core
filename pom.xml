@@ -7,7 +7,7 @@
 	<groupId>com.pleosoft.pleodox</groupId>
 	<artifactId>pleodox-core</artifactId>
 	<packaging>jar</packaging>
-	<version>1.0.2-SNAPSHOT</version>
+	<version>1.0.2-RELEASE</version>
 
 	<name>pleodox-core</name>
 	<description>Pleodox Core</description>
