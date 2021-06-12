@@ -14,17 +14,15 @@
  * limitations under the License.
  */
 
-package com.pleosoft.pleodox.boot.storage;
+package com.pleosoft.pleodox;
 
-public class StorageException extends RuntimeException {
+public class NoopDocumentGenerationHandler implements DocumentGenerationHandler {
 
-	private static final long serialVersionUID = -6519844869043055357L;
-
-	public StorageException(String message) {
-		super(message);
+	@Override
+	public void beforeDocumentGenerated() {
 	}
 
-	public StorageException(String message, Throwable cause) {
-		super(message, cause);
+	@Override
+	public void afterDocumentGenerated() {
 	}
 }

@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-package com.pleosoft.pleodox.boot.storage;
-
-import static java.util.stream.Collectors.toList;
+package com.pleosoft.pleodoxstorage;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,7 +23,6 @@ import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.List;
 
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -66,28 +63,9 @@ public class DefaultStorageService implements StorageService {
 			return newPath;
 		} catch (final IOException e) {
 			throw new StorageException("Failed to store file " + filename, e);
-		} finally {
-			// try {
-			// inputStream.close();
-			// } catch (final IOException e) {
-			// ;
-			// }
 		}
 	}
 
-	public List<Path> loadAllTemplates() {
-		try {
-
-			final Path templatesPath = this.templateLocation;
-			return Files.walk(templatesPath, 1).filter(Files::isRegularFile)
-					.filter(path -> !path.equals(templatesPath)
-							&& (StringUtils.getFilenameExtension(path.getFileName().toString()).equalsIgnoreCase("docx")
-									|| StringUtils.getFilenameExtension(path.getFileName().toString()).equalsIgnoreCase("dotx")))
-					.map(p -> p).collect(toList());
-		} catch (final IOException e) {
-			throw new StorageException("Failed to read stored files", e);
-		}
-	}
 
 	public Path loadFromTemporary(String filename) {
 		if (filename.contains("..")) {
@@ -121,6 +99,23 @@ public class DefaultStorageService implements StorageService {
 		}
 	}
 
+	public InputStream loadAsTemplateInputStream(final String filename) {
+		try {
+			return loadAsTemplateResource(filename).getInputStream();
+		} catch (IOException e) {
+			throw new StorageException("Cannot load a file with relative path outside current directory " + filename);
+		}
+	}
+
+	@Override
+	public InputStream loadAsTemporaryInputStream(String filename) {
+		try {
+			return loadAsTemporaryResource(filename).getInputStream();
+		} catch (IOException e) {
+			throw new StorageException("Cannot load a file with relative path outside current directory " + filename);
+		}
+	}
+
 	public Resource loadAsTemporaryResource(final String filename) {
 		Path file = loadFromTemporary(filename);
 
@@ -135,6 +130,10 @@ public class DefaultStorageService implements StorageService {
 		} catch (final MalformedURLException e) {
 			throw new StorageFileNotFoundException("Could not read file: " + file.getFileName(), e);
 		}
+	}
+
+	public boolean exists(final String filename) {
+		return loadAsTemplateResource(filename).exists();
 	}
 
 }

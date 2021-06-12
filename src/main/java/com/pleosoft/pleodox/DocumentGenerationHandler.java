@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-package com.pleosoft.pleodox.boot.service;
+package com.pleosoft.pleodox;
 
-public class TemplateFailedException extends RuntimeException {
+public interface DocumentGenerationHandler {
 
-	private static final long serialVersionUID = 8063009132972880840L;
+	void beforeDocumentGenerated();
 
-	public TemplateFailedException(Throwable cause) {
-		super(cause);
-	}
+	void afterDocumentGenerated();;
+
 }

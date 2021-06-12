@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.pleosoft.pleodox.boot.storage;
+package com.pleosoft.pleodoxstorage;
 
 public class StorageFileNotFoundException extends StorageException {
 

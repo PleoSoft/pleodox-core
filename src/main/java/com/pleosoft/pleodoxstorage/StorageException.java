@@ -14,19 +14,17 @@
  * limitations under the License.
  */
 
-package com.pleosoft.pleodox.boot.data;
+package com.pleosoft.pleodoxstorage;
 
-public enum TemplateOutputFormat {
-	DOCX(".docx"), PDF(".pdf");
+public class StorageException extends RuntimeException {
 
-	private String extension;
+	private static final long serialVersionUID = -6519844869043055357L;
 
-	private TemplateOutputFormat(String extension) {
-		this.extension = extension;
+	public StorageException(String message) {
+		super(message);
 	}
 
-	public String getExtension() {
-		return extension;
+	public StorageException(String message, Throwable cause) {
+		super(message, cause);
 	}
-
 }

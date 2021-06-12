@@ -14,16 +14,20 @@
  * limitations under the License.
  */
 
-package com.pleosoft.pleodox.boot.service;
+package com.pleosoft.pleodox;
 
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import com.pleosoft.pleodox.boot.data.DataRoot;
-import com.pleosoft.pleodox.boot.data.TemplateOptions;
+import com.pleosoft.pleodox.data.DataRoot;
+import com.pleosoft.pleodox.data.TemplateOptions;
 
 public interface DocumentGenerator {
 
-	public void generate(InputStream templateStream, OutputStream os, DataRoot dataroot, TemplateOptions options) throws Exception;
+	public void generate(InputStream templateStream, OutputStream os, DataRoot dataroot, TemplateOptions options, int flags) throws Exception;
 	public boolean isTransformable(String templateName, DataRoot dataroot, TemplateOptions options);
+	
+	default public boolean isImageHandledAsBase64()  {
+		return false;
+	}
 }

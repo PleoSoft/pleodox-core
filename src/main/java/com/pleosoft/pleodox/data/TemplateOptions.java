@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.pleosoft.pleodox.boot.data;
+package com.pleosoft.pleodox.data;
 
 import java.util.HashMap;
 import java.util.Map;

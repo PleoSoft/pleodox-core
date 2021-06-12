@@ -14,34 +14,13 @@
  * limitations under the License.
  */
 
-package com.pleosoft.pleodox.boot.data;
+package com.pleosoft.pleodox;
 
-import java.util.HashMap;
-import java.util.Map;
+public class TemplateFailedException extends RuntimeException {
 
-public class DataRoot {
+	private static final long serialVersionUID = 8063009132972880840L;
 
-	private String xmlns;
-
-	private final Map<String, Object> data = new HashMap<>();
-
-	public String getXmlns() {
-		return xmlns;
-	}
-
-	public void setXmlns(String xmlns) {
-		this.xmlns = xmlns;
-	}
-
-	public Map<String, Object> getData() {
-		return new HashMap<String, Object>(data);
-	}
-
-	public void putAll(Map<String, Object> map) {
-		data.putAll(map);
-	}
-
-	public void put(String xmlRootElement, Map<String, Object> map) {
-		data.put(xmlRootElement, map);
+	public TemplateFailedException(Throwable cause) {
+		super(cause);
 	}
 }

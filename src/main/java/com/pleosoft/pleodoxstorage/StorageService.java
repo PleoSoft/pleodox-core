@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.pleosoft.pleodox.boot.storage;
+package com.pleosoft.pleodoxstorage;
 
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -26,4 +26,10 @@ public interface StorageService {
 	public Path storeTemporary(InputStream inputStream, String filename);
 
 	public Path loadExistingTemplate(final String filename);
+
+	public InputStream loadAsTemplateInputStream(final String filename);
+	
+	public InputStream loadAsTemporaryInputStream(final String filename);
+
+	public boolean exists(String path);
 }
