@@ -28,12 +28,12 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.util.StringUtils;
 
-public class DefaultStorageService implements StorageService {
+public class FileSystemStorageService implements StorageService {
 
 	private final Path temporaryLocation;
 	private final Path templateLocation;
 
-	public DefaultStorageService(final Path temporaryLocation, final Path templateLocation) throws IOException {
+	public FileSystemStorageService(final Path temporaryLocation, final Path templateLocation) throws IOException {
 		this.temporaryLocation = temporaryLocation;
 		this.templateLocation = templateLocation;
 

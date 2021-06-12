@@ -73,7 +73,7 @@ public class DocxGenerator implements DocumentGenerator {
 	@Override
 	public boolean isTransformable(String templateName, DataRoot dataroot, TemplateOptions options) {
 		String filenameExtension = StringUtils.getFilenameExtension(templateName).toUpperCase();
-		return "DOCX".equals(filenameExtension) || "DOTX".equals(filenameExtension);
+		return "DOCX".equals(filenameExtension);
 	}
 
 	@Override
