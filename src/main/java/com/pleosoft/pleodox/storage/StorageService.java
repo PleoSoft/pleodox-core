@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.pleosoft.pleodoxstorage;
+package com.pleosoft.pleodox.storage;
 
 import java.io.InputStream;
 import java.nio.file.Path;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.pleosoft.pleodoxstorage;
+package com.pleosoft.pleodox.storage;
 
 import java.io.File;
 import java.io.IOException;

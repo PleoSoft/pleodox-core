@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package com.pleosoft.pleodoxstorage;
+package com.pleosoft.pleodox.storage;
 
-public class StorageException extends RuntimeException {
+public class StorageFileNotFoundException extends StorageException {
 
-	private static final long serialVersionUID = -6519844869043055357L;
+	private static final long serialVersionUID = 1L;
 
-	public StorageException(String message) {
+	public StorageFileNotFoundException(String message) {
 		super(message);
 	}
 
-	public StorageException(String message, Throwable cause) {
+	public StorageFileNotFoundException(String message, Throwable cause) {
 		super(message, cause);
 	}
 }

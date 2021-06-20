@@ -25,10 +25,13 @@ import java.net.URISyntaxException;
 import java.util.Map;
 
 import org.docx4j.Docx4J;
+import org.docx4j.model.datastorage.CustomXmlDataStoragePartSelector;
 import org.docx4j.openpackaging.contenttype.ContentTypeManager;
 import org.docx4j.openpackaging.contenttype.ContentTypes;
 import org.docx4j.openpackaging.packages.ProtectDocument;
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
+import org.docx4j.openpackaging.parts.CustomXmlDataStoragePart;
+import org.docx4j.openpackaging.parts.CustomXmlPart;
 import org.docx4j.wml.STDocProtect;
 import org.springframework.util.StringUtils;
 
@@ -50,8 +53,11 @@ public class DocxGenerator implements DocumentGenerator {
 			int flags) throws Exception {
 		WordprocessingMLPackage wordMLPackage = Docx4J.load(templateStream);
 
-		try (InputStream xmlStreamTmp = new ByteArrayInputStream(getDataRootAsString(dataroot).getBytes())) {
-			Docx4J.bind(wordMLPackage, xmlStreamTmp, flags);
+		CustomXmlPart xmlPart = CustomXmlDataStoragePartSelector.getCustomXmlDataStoragePart(wordMLPackage);
+		if (xmlPart instanceof CustomXmlDataStoragePart) {
+			try (InputStream xmlStreamTmp = new ByteArrayInputStream(getDataRootAsString(dataroot).getBytes())) {
+				Docx4J.bind(wordMLPackage, xmlStreamTmp, flags);
+			}
 		}
 
 		if (Boolean.TRUE.equals((Boolean) options.getOption("readOnly"))) {
