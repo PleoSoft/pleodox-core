@@ -20,6 +20,10 @@ public class TemplateFailedException extends RuntimeException {
 
 	private static final long serialVersionUID = 8063009132972880840L;
 
+	public TemplateFailedException(String message) {
+		super(message);
+	}
+
 	public TemplateFailedException(Throwable cause) {
 		super(cause);
 	}

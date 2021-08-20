@@ -67,15 +67,15 @@ public class FileSystemStorageService implements StorageService {
 	}
 
 
-	public Path loadFromTemporary(String filename) {
-		if (filename.contains("..")) {
-			// This is a security check
-			throw new StorageException("Cannot store file with relative path outside current directory " + filename);
-		}
-		return temporaryLocation.resolve(StringUtils.cleanPath(filename));
-	}
+//	public Path loadFromTemporary(String filename) {
+//		if (filename.contains("..")) {
+//			// This is a security check
+//			throw new StorageException("Cannot store file with relative path outside current directory " + filename);
+//		}
+//		return temporaryLocation.resolve(StringUtils.cleanPath(filename));
+//	}
 
-	public Path loadExistingTemplate(final String filename) {
+	public Path resolveTemplate(final String filename) {
 		if (filename.contains("..")) {
 			// This is a security check
 			throw new StorageException("Cannot load a file with relative path outside current directory " + filename);
@@ -83,57 +83,57 @@ public class FileSystemStorageService implements StorageService {
 		return templateLocation.resolve(StringUtils.cleanPath(filename));
 	}
 
-	public Resource loadAsTemplateResource(final String filename) {
-		Path file = loadExistingTemplate(filename);
+//	public Resource loadAsTemplateResource(final String filename) {
+//		Path file = loadTemplate(filename);
+//
+//		try {
+//			final Resource resource = new UrlResource(file.toUri());
+//			if (resource.exists() || resource.isReadable()) {
+//				return resource;
+//			} else {
+//				throw new StoragePathNotFoundException("Could not read file: " + file.getFileName());
+//
+//			}
+//		} catch (final MalformedURLException e) {
+//			throw new StoragePathNotFoundException("Could not read file: " + file.getFileName(), e);
+//		}
+//	}
 
-		try {
-			final Resource resource = new UrlResource(file.toUri());
-			if (resource.exists() || resource.isReadable()) {
-				return resource;
-			} else {
-				throw new StorageFileNotFoundException("Could not read file: " + file.getFileName());
+//	public InputStream loadAsTemplateInputStream(final String filename) {
+//		try {
+//			return loadAsTemplateResource(filename).getInputStream();
+//		} catch (IOException e) {
+//			throw new StorageException("Cannot load a file with relative path outside current directory " + filename);
+//		}
+//	}
 
-			}
-		} catch (final MalformedURLException e) {
-			throw new StorageFileNotFoundException("Could not read file: " + file.getFileName(), e);
-		}
-	}
+//	@Override
+//	public InputStream loadAsTemporaryInputStream(String filename) {
+//		try {
+//			return loadAsTemporaryResource(filename).getInputStream();
+//		} catch (IOException e) {
+//			throw new StorageException("Cannot load a file with relative path outside current directory " + filename);
+//		}
+//	}
 
-	public InputStream loadAsTemplateInputStream(final String filename) {
-		try {
-			return loadAsTemplateResource(filename).getInputStream();
-		} catch (IOException e) {
-			throw new StorageException("Cannot load a file with relative path outside current directory " + filename);
-		}
-	}
+//	public Path loadTemporary(final String filename) {
+//		Path file = loadFromTemporary(filename);
+//
+//		try {
+//			final Resource resource = new UrlResource(file.toUri());
+//			if (resource.exists() || resource.isReadable()) {
+//				return resource;
+//			} else {
+//				throw new StoragePathNotFoundException("Could not read file: " + file.getFileName());
+//
+//			}
+//		} catch (final MalformedURLException e) {
+//			throw new StoragePathNotFoundException("Could not read file: " + file.getFileName(), e);
+//		}
+//	}
 
-	@Override
-	public InputStream loadAsTemporaryInputStream(String filename) {
-		try {
-			return loadAsTemporaryResource(filename).getInputStream();
-		} catch (IOException e) {
-			throw new StorageException("Cannot load a file with relative path outside current directory " + filename);
-		}
-	}
-
-	public Resource loadAsTemporaryResource(final String filename) {
-		Path file = loadFromTemporary(filename);
-
-		try {
-			final Resource resource = new UrlResource(file.toUri());
-			if (resource.exists() || resource.isReadable()) {
-				return resource;
-			} else {
-				throw new StorageFileNotFoundException("Could not read file: " + file.getFileName());
-
-			}
-		} catch (final MalformedURLException e) {
-			throw new StorageFileNotFoundException("Could not read file: " + file.getFileName(), e);
-		}
-	}
-
-	public boolean exists(final String filename) {
-		return loadAsTemplateResource(filename).exists();
-	}
+//	public boolean existsTemplate(final String filename) {
+//		return Files.exists(resolveTemplate(filename));
+//	}
 
 }

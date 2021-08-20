@@ -25,11 +25,5 @@ public interface StorageService {
 
 	public Path storeTemporary(InputStream inputStream, String filename);
 
-	public Path loadExistingTemplate(final String filename);
-
-	public InputStream loadAsTemplateInputStream(final String filename);
-	
-	public InputStream loadAsTemporaryInputStream(final String filename);
-
-	public boolean exists(String path);
+	public Path resolveTemplate(final String filename);
 }
