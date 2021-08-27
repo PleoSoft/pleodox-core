@@ -22,7 +22,7 @@ import java.io.OutputStream;
 import com.pleosoft.pleodox.data.PleodoxRoot.PleodoxRequest;
 import com.pleosoft.pleodox.data.TemplateOptions;
 
-public interface DocumentGenerator {
+public interface TemplateGenerator {
 
 	public void generate(InputStream templateStream, OutputStream os, PleodoxRequest dataroot, TemplateOptions options) throws Exception;
 	public boolean isTransformable(String templateName, PleodoxRequest dataroot, TemplateOptions options);
@@ -30,4 +30,5 @@ public interface DocumentGenerator {
 	default public boolean isImageHandledAsBase64()  {
 		return false;
 	}
+
 }
