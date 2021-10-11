@@ -18,11 +18,14 @@ package com.pleosoft.pleodox;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -50,11 +53,14 @@ import org.docx4j.openpackaging.parts.CustomXmlPart;
 import org.docx4j.wml.STDocProtect;
 import org.springframework.util.StringUtils;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.github.underscore.lodash.U;
+import com.pleosoft.pleodox.data.ObjectMerger;
 import com.pleosoft.pleodox.data.PleodoxRoot;
 import com.pleosoft.pleodox.data.PleodoxRoot.PleodoxRequest;
 import com.pleosoft.pleodox.data.TemplateOptions;
@@ -104,8 +110,23 @@ public class DocxGenerator implements TemplateGenerator {
 							Pair<String, PleodoxRoot> newPleodox = collected.get(xmlns);
 							if (newPleodox != null && newPleodox.getLeft().equals(rootElement)) {
 
+								PleodoxRoot pleodox = newPleodox.getRight();
+								if (Boolean.TRUE.equals((Boolean) options.getOption("mergeDefaults"))) {
+									String xml = customXmlDataStorage.getXML();
+									String defaults = U.xmlToJson(xml);
+									PleodoxRoot defaultsPleodox = objectMapper.readValue(defaults,
+											new TypeReference<PleodoxRoot>() {
+											});
+
+									JsonNode jsonDefaults = objectMapper.valueToTree(defaultsPleodox);
+									JsonNode jsonRequest = objectMapper.valueToTree(newPleodox.getRight());
+
+									ObjectMerger.merge(jsonRequest, jsonDefaults);
+									pleodox = objectMapper.treeToValue(jsonRequest, PleodoxRoot.class);
+								}
+
 								String asString = objectMapper.writer().withRootName(newPleodox.getLeft())
-										.writeValueAsString(newPleodox.getRight());
+										.writeValueAsString(pleodox);
 								String toXml = U.jsonToXml(asString);
 
 								StartEvent startEvent = new StartEvent(WellKnownJobTypes.BIND, wordMLPackage,
@@ -113,11 +134,12 @@ public class DocxGenerator implements TemplateGenerator {
 								startEvent.publish();
 
 								// TODO charsets might cause issues in multi lingual environments
-								InputStream is = new ByteArrayInputStream(toXml.getBytes());
-								CustomXmlDataStorage data = new CustomXmlDataStorageImpl();
-								data.setDocument(is);
-								// ((CustomXmlDataStoragePart) xmlPart).setData(data);
-								((CustomXmlDataStoragePart) xmlPart).setXML(data.getDocument());
+								try (InputStream is = new ByteArrayInputStream(toXml.getBytes())) {
+									CustomXmlDataStorage data = new CustomXmlDataStorageImpl();
+									data.setDocument(is);
+									// ((CustomXmlDataStoragePart) xmlPart).setData(data);
+									((CustomXmlDataStoragePart) xmlPart).setXML(data.getDocument());
+								}
 
 								new EventFinished(startEvent).publish();
 
@@ -197,13 +219,64 @@ public class DocxGenerator implements TemplateGenerator {
 	}
 
 	@Override
-	public boolean isTransformable(String templateName, PleodoxRequest dataroot, TemplateOptions options) {
+	public boolean isTransformable(String templateName, TemplateOptions options) {
 		String filenameExtension = StringUtils.getFilenameExtension(templateName).toUpperCase();
 		return "DOCX".equals(filenameExtension);
 	}
 
-	@Override
-	public boolean isImageHandledAsBase64() {
-		return true;
-	}
+//	@Override
+//	public List<PleodoxRoot> getPleodoxRoots(InputStream templateStream) throws Exception {
+//
+//		WordprocessingMLPackage wordMLPackage = Docx4J.load(templateStream);
+//
+//		HashMap<String, CustomXmlPart> customXmlDataStorageParts = wordMLPackage.getCustomXmlDataStorageParts();
+//
+//		List<PleodoxRoot> roots = new ArrayList<>();
+//		if (customXmlDataStorageParts != null) {
+//			StartEvent bindJobStartEvent = new StartEvent(WellKnownJobTypes.BIND, wordMLPackage);
+//			bindJobStartEvent.publish();
+//
+//			customXmlDataStorageParts.entrySet().forEach(entry -> {
+//				try {
+//					CustomXmlPart xmlPart = entry.getValue();
+//					if (xmlPart instanceof CustomXmlDataStoragePart) {
+//						CustomXmlDataStorage customXmlDataStorage = ((CustomXmlDataStoragePart) xmlPart).getData();
+//
+//						String xmlns = customXmlDataStorage.getDocument().lookupNamespaceURI(null);
+//						String rootElement = customXmlDataStorage.cachedXPathGetString("name(/*[1])", null);
+//
+//						if (StringUtils.hasText(xmlns)) {
+//							String xml = customXmlDataStorage.getXML();
+//							String defaults = U.xmlToJson(xml);
+//
+//							Map<String, Object> map = objectMapper.readValue(defaults,
+//									new TypeReference<Map<String, Object>>() {
+//									});
+//
+//							Object object = map.get(rootElement);
+//							PleodoxRoot defaultsPleodox = objectMapper.convertValue(object,
+//									new TypeReference<PleodoxRoot>() {
+//									});
+//
+//							roots.add(defaultsPleodox);
+//						}
+//					}
+//				} catch (Throwable e) {
+//					throw new IllegalStateException(e);
+//				}
+//			});
+//		}
+//
+//		return roots;
+//	}
+//
+//	@Override
+//	public void addPleodoxRoot(InputStream templateStream, PleodoxRoot pleodox, String rootName) throws Exception {
+//		String asString = objectMapper.writer().withRootName(rootName).writeValueAsString(pleodox);
+//		String toXml = U.jsonToXml(asString);
+//
+//		WordprocessingMLPackage wordMLPackage = Docx4J.load(templateStream);
+//		HashMap<String, CustomXmlPart> customXmlDataStorageParts = wordMLPackage.getCustomXmlDataStorageParts();
+//		Docx4J.bind(wordMLPackage, toXml, Docx4J.FLAG_BIND_INSERT_XML | Docx4J.FLAG_BIND_BIND_XML);
+//	}
 }

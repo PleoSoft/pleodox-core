@@ -16,6 +16,7 @@
 
 package com.pleosoft.pleodox.data;
 
+import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.charset.UnsupportedCharsetException;
@@ -24,21 +25,35 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonMerge;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class PleodoxRoot {
+public class PleodoxRoot implements Serializable {
 
 	@JsonProperty("-xmlns")
+	@JsonAlias("_xmlns")
 	private final String xmlns;
 
+	@JsonMerge
 	final Map<String, Object> anyData = new HashMap<>();
 
 	@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 	public PleodoxRoot(@JsonProperty(value = "-xmlns") String xmlns) {
 		this.xmlns = xmlns;
+	}
+
+	private List<Barcode> barcodes;
+
+	public void setBarcodes(List<Barcode> barcodes) {
+		this.barcodes = barcodes;
+	}
+
+	public List<Barcode> getBarcodes() {
+		return barcodes;
 	}
 
 	@JsonAnyGetter
@@ -116,7 +131,6 @@ public class PleodoxRoot {
 
 	public static class PleodoxRequest {
 		private Map<String, PleodoxRoot> pleodox;
-		private List<Barcode> barcodes;
 
 		final Map<String, Object> anyData = new HashMap<>();
 
@@ -128,14 +142,6 @@ public class PleodoxRoot {
 		@JsonAnySetter
 		public void addAnyData(String key, Object value) {
 			anyData.put(key, value);
-		}
-
-		public void setBarcodes(List<Barcode> barcodes) {
-			this.barcodes = barcodes;
-		}
-
-		public List<Barcode> getBarcodes() {
-			return barcodes;
 		}
 
 		public Map<String, PleodoxRoot> getPleodox() {

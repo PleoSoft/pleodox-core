@@ -25,10 +25,5 @@ import com.pleosoft.pleodox.data.TemplateOptions;
 public interface TemplateGenerator {
 
 	public void generate(InputStream templateStream, OutputStream os, PleodoxRequest dataroot, TemplateOptions options) throws Exception;
-	public boolean isTransformable(String templateName, PleodoxRequest dataroot, TemplateOptions options);
-	
-	default public boolean isImageHandledAsBase64()  {
-		return false;
-	}
-
+	public boolean isTransformable(String templateName, TemplateOptions options);
 }
