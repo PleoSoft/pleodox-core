@@ -19,7 +19,6 @@ package com.pleosoft.pleodox.data;
 import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.nio.charset.UnsupportedCharsetException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -35,14 +34,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class PleodoxRoot implements Serializable {
 
 	@JsonProperty("-xmlns")
-	@JsonAlias("_xmlns")
 	private final String xmlns;
 
 	@JsonMerge
 	final Map<String, Object> anyData = new HashMap<>();
 
 	@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-	public PleodoxRoot(@JsonProperty(value = "-xmlns") String xmlns) {
+	public PleodoxRoot(@JsonProperty(value = "-xmlns") @JsonAlias("_xmlns") String xmlns) {
 		this.xmlns = xmlns;
 	}
 
@@ -92,11 +90,7 @@ public class PleodoxRoot implements Serializable {
 
 	public static Charset lookupCharset(String csn) {
 		if (Charset.isSupported(csn)) {
-			try {
-				return Charset.forName(csn);
-			} catch (UnsupportedCharsetException x) {
-				throw new Error(x);
-			}
+			return Charset.forName(csn);
 		}
 		return null;
 	}
