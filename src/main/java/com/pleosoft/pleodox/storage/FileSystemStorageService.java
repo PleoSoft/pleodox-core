@@ -19,13 +19,10 @@ package com.pleosoft.pleodox.storage;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
 import org.springframework.util.StringUtils;
 
 public class FileSystemStorageService implements StorageService {
